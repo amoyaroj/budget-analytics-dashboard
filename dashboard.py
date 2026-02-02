@@ -1,107 +1,224 @@
+"""
+Agustin Moya
+IBE @ Purdue 
+
+Description:
+    This program is a smart dynamic budget tool and dashboard that allows users to 
+    plan, visualize and analyze their spending in a given period of time. 
+    
+    budget, and gain valuable 
+    insights on their spending practices, valuations, and goal efficiencies, 
+    this way allowing them to optimize their money allocation. 
+
+Contributors:
+    GeminiAI used to perform general debugging while constructing my UDFs to
+    ensure consistency, orginization, and good coding practices. 
+    Derek Banas, Youtube, "Seaborn Tutorial : Seaborn Full Course" used for 
+    references on how to best apply Seaborn Library. 
+"""
+
 import matplotlib.pyplot as plt
-import seaborn as sns
+import seaborn as sns  #new library to enhance visualization 
 
-# 1. DATA INPUT & VALIDATION (Error Checking)
-# =================================================================
-
+#error_checking.py
 def positive_float_input(prompt): 
     """
-    Ensures data integrity by validating inputs as positive numerical values.
-    """
-    while True:
-        user_input = input(prompt)
-        try:
-            value = float(user_input)
-            if value >= 0: 
-                return value
-            else: 
-                print("Error: Please input a positive value.")
-        except ValueError:
-            print("Error: Input must be a number.")
+   turns input into a float, to handle decimals too, loops until a valid input 
+   from the user is given, this being a positive value and a numerical one. 
+   """
+    while True: # infinite loop
+        user_input = input(prompt) #string
 
+        try:
+            value = float(user_input) #tries to convert to float
+            if value >= 0: 
+                return value #worked!
+            else: 
+                print("yo! make sure you input a positive value!")
+        
+        except ValueError: #above failed (if user entered abc or *?%&° ) 
+            print("yo! make sure you input a number!")
+
+#UDF #1 Set Up Budget Preferences.  
 def setup_budget():
     """
-    Initializes budget parameters including income, savings goals, and categories.
+    ask the user for expected income, amount they want to allocate to 
+    'savings', set the expected expenses in preset categories, check for errors too. 
     """
-    print(" | - - - Setting Up Your Dynamic Budget - - - |")
-    expected_income = positive_float_input("Monthly Income: $")
-    savings_goal = positive_float_input("Monthly Savings Goal: $")
+    print(" | - - - Setting Up Your Dynamic Budget: - - - |")
     
+    #get the expected income and savings goal from the user: 
+    expected_income = positive_float_input(
+        "What's your monthly income?"
+        )
+    #get savings goal 
+    savings_goal = positive_float_input(
+        "How much do you want to save per month?"
+        )
+    
+    #defining # of categories
     while True:
         try: 
-            num_categories = int(input("How many categories do you want to track? "))
-            if num_categories > 0: break
-            print("Please enter at least 1 category.")
+            num_categories = int(input("How many categories do you want to track?"))
+            if num_categories > 0: 
+                break
+            print("Please enter at least 1 category")
         except ValueError:
-            print("Please enter a valid number.")
+            print("Please enter a number")
+
+    #names of each category
+    custom_categories = []
+    for i in range(num_categories): 
+        cat_name = input(f" Enter name for category #{i+1}: ").strip()
+
+        if not cat_name: 
+            cat_name = f"Category {i+1}"
+        custom_categories.append(cat_name)
+    
+    print("\nGreat, now let's estimate your expenses.")
+    
+    # for loop to get each expense per category
 
     expenses_by_category = {}
-    for i in range(num_categories): 
-        cat_name = input(f"Enter name for category #{i+1}: ").strip() or f"Category {i+1}"
-        expenses_by_category[cat_name] = positive_float_input(f" - Estimated cost of {cat_name}: $")
 
+    for category in custom_categories:
+        prompt = f" - Estimated cost of {category}: $" 
+        amount = positive_float_input(prompt)       
+        expenses_by_category[category] = amount     
+
+    print("Preferences input sucessful!")
     return expected_income, savings_goal, expenses_by_category 
 
-# 2. BUDGET CALCULATIONS & ANALYSIS
-# =================================================================
-
+#UDF #2 Budget Calculations: 
 def calculate_budget(expected_income, expenses_by_category, savings_goal):
     """
-    Performs core financial analysis to determine net savings and goal variances.
+    this calculates the total expenses and calculates expected savings. 
     """
-    total_expenses = sum(expenses_by_category.values())
+    print("\nCalculating Our Budget:")
+    
+    #calculating total expected expense: 
+    total_expenses = 0
+    expense_values = list(expenses_by_category.values())# turn dictionary values into a list to iterate over them, values is used to just get numbers not names
+    for cost in expense_values: 
+        total_expenses = total_expenses + cost 
+    
+    # Calculate expected savings: 
     projected_savings = expected_income - total_expenses
+    
+    #compares projected savings from prefered saving goal: 
     diff_savings_goal = projected_savings - savings_goal
+
+    print("Calculations Successful!")
 
     return total_expenses, projected_savings, diff_savings_goal
 
-# 3. VISUALIZATION DASHBOARD (Seaborn & Matplotlib)
-# =================================================================
+def display_dashboard(expected_income, savings_goal, expenses_by_category, total_expenses, projected_savings, diff_savings_goal):
+    """
+    Displays the complete budget dashboard with dynamic category analysis and 
+    auto-scaling visualizations.
+    """
+    print("\n | - - - Monthly Budget Report: - - - |")
 
-def display_dashboard(income, goal, expenses, total_exp, savings, diff):
-    """
-    Generates a professional 3-panel financial dashboard.
-    """
-    # Styling and Palette Setup
-    num_cats = len(expenses)
-    mako_palette = sns.color_palette('mako', n_colors=num_cats + 1)
+    # Highest Spending Category Analysis
+    if expenses_by_category:
+        exclude_rent = 'Rent'
+        highest_amount = 0
+        highest_category = "None"
+
+        for category, amount in expenses_by_category.items():
+            if category.lower() == exclude_rent.lower():
+                continue 
+            if amount > highest_amount:
+                highest_amount = amount
+                highest_category = category
+
+    # generating colors for the whole dashboard 
+    num_cats = len(expenses_by_category)
+    mako_palette = sns.color_palette('mako', n_colors=num_cats) 
+    bg_color = mako_palette[1] #dark blue
+    text_color = "white"
+
+    # summary board
+    status = "Goal met!" if diff_savings_goal >= 0 else "Goal Deficit!"
     
-    plt.figure(figsize=(16, 7), facecolor='#f0f0f0')
+    report_text = (
+        f"FINANCIAL SUMMARY\n"
+        
+        f"Income:    ${expected_income:>10,.2f}\n"
+        f"Expenses:  ${total_expenses:>10,.2f}\n"
+        f"Savings:   ${projected_savings:>10,.2f}\n"
+        
+        f"Goal:      ${savings_goal:>10,.2f}\n"
+        f"Status:    {status:>10}\n"
+        f"Diff:      ${abs(diff_savings_goal):>10,.2f}"
+    )
 
-    # Panel 1: Financial Insights Summary
+    # Creating visuals 
+    plt.figure(figsize=(16, 7), facecolor='#f0f0f0') # Light grey background for the whole window
+
+    # Insights Card
     ax1 = plt.subplot(1, 3, 1)
     plt.axis('off')
-    status = "Goal Met!" if diff >= 0 else "Goal Deficit!"
-    report_text = (
-        f"FINANCIAL SUMMARY\n\n"
-        f"Income:    ${income:>10,.2f}\n"
-        f"Expenses:  ${total_exp:>10,.2f}\n"
-        f"Savings:   ${savings:>10,.2f}\n"
-        f"----------------------\n"
-        f"Goal:      ${goal:>10,.2f}\n"
-        f"Status:    {status:>10}\n"
-        f"Diff:      ${abs(diff):>10,.2f}"
-    )
-    plt.text(0.5, 0.5, report_text, fontsize=13, weight='bold', family='sans-serif',
-             ha='center', va='center', bbox=dict(boxstyle="round,pad=1.5", 
-             facecolor=mako_palette[1], edgecolor='none', alpha=0.9, color='white'))
-    plt.title("Financial Insights", fontsize=15, fontweight='bold', pad=20)
+    
+    
+    plt.text(0.5, 0.5, report_text, 
+             fontsize=13, 
+             color=text_color,
+             weight='bold',
+             family='Avenir',
+             ha='center', va='center',
+             bbox=dict(boxstyle="round,pad=1.5", 
+                       facecolor=bg_color, 
+                       edgecolor='none', 
+                       alpha=0.9)) 
+    
+    plt.title("Insights", fontsize=15, fontweight='bold', pad=20)
 
-    # Panel 2: Expense Distribution (Pie)
+    # pie chart 
     plt.subplot(1, 3, 2)
-    plt.pie(expenses.values(), labels=expenses.keys(), colors=mako_palette[1:], 
-            autopct='%1.1f%%', startangle=140, shadow=True, textprops={'fontweight': 'bold'})
+    labels_list = list(expenses_by_category.keys())
+    values_list = list(expenses_by_category.values())
+    plt.pie(values_list, labels=labels_list, colors=mako_palette[1:], 
+            autopct='%1.1f%%', startangle=140, shadow=True,
+            textprops={'fontweight': 'bold'})
     plt.title('Expense Distribution', fontsize=15, fontweight='bold')
 
-    # Panel 3: Cost Comparison (Bar)
+    # bar chart 
     plt.subplot(1, 3, 3)
-    sns.barplot(x=list(expenses.keys()), y=list(expenses.values()), palette="mako")
+    sns.barplot(x=labels_list, y=values_list, palette="mako", hue=labels_list, legend=False)
     plt.title('Cost Comparison', fontsize=15, fontweight='bold')
     plt.xticks(rotation=45)
+    plt.grid(axis='y', linestyle='--', alpha=0.6) 
+
     plt.tight_layout()
     plt.show()
 
+
+# Main function 
+def main():
+    
+    # call udf 1 to get these 3 inputs 
+    expected_income, savings_goal, expenses_by_category = setup_budget()
+    
+    # call udf 2 to perform calculations, passing the inputs we just got into this function
+    total_expenses, projected_savings, diff_savings_goal = calculate_budget(
+        expected_income, 
+        expenses_by_category, 
+        savings_goal
+    )
+    
+    # call udf 3 to display dashboard, passing data to the final display function
+    display_dashboard(
+        expected_income, 
+        savings_goal, 
+        expenses_by_category, 
+        total_expenses, 
+        projected_savings, 
+        diff_savings_goal
+    )
+
 if __name__ == "__main__":
-    income, goal, expenses = setup_budget()
-    total_exp, savings, diff = calculate_budget(income, expenses, goal)
-    display_dashboard(income, goal, expenses, total_exp, savings, diff)
+    main()
+
+
+
