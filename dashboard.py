@@ -2,19 +2,6 @@
 Agustin Moya
 IBE @ Purdue 
 
-Description:
-    This program is a smart dynamic budget tool and dashboard that allows users to 
-    plan, visualize and analyze their spending in a given period of time. 
-    
-    budget, and gain valuable 
-    insights on their spending practices, valuations, and goal efficiencies, 
-    this way allowing them to optimize their money allocation. 
-
-Contributors:
-    GeminiAI used to perform general debugging while constructing my UDFs to
-    ensure consistency, orginization, and good coding practices. 
-    Derek Banas, Youtube, "Seaborn Tutorial : Seaborn Full Course" used for 
-    references on how to best apply Seaborn Library. 
 """
 
 import matplotlib.pyplot as plt
