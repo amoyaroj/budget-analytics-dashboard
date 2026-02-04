@@ -17,14 +17,10 @@ The goal of this project was to create a functional, user-centric application th
 
 ## 🛠️ Technical Stack
 * **Language**: Python ![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54)
-* **Concepts**: Data Automation, Financial Modeling, Object-Oriented Programming (OOP).
+* **Concepts**: Data Automation, Financial Modeling
 
 ---
 
 ## 📂 Repository Structure
 * `budget_app.py`: Main application script.
 
----
-
-### 🎓 Academic & Career Context
-This project showcases the ability to apply software engineering principles to solve real-world financial management challenges, a core skill for roles in Corporate Finance and FinTech.
